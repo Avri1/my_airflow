@@ -10,7 +10,7 @@ spec:
   template:
     spec:
       containers:
-        - image: "wanghanchengchn/airflow-worker:latest"
+        - image: "1481767455/airflow-worker:latest"
           imagePullPolicy: Always
           ports:
             - name: h2c
