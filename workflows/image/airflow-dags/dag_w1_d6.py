@@ -27,42 +27,47 @@ def dag_w1_d6():
     def func_1_1(sleep_time_ms):
         logging.info("======= vertex1 execution =======")
         t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+        return 100
 
     @task
     @timing
     def func_1_2(sleep_time_ms):
         logging.info("======= vertex2 execution =======")
+        logging.info(f"func_1_2 received: {sleep_time_ms}")
         t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+        return 200
 
     @task
     @timing
     def func_1_3(sleep_time_ms):
         logging.info("======= vertex3 execution =======")
+        logging.info(f"func_1_3 received: {sleep_time_ms}")
         t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+        return 300
     
     @task
     @timing
     def func_1_4(sleep_time_ms):
         logging.info("======= vertex4 execution =======")
+        logging.info(f"func_1_4 received: {sleep_time_ms}")
         t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+        return 400
     
     @task
     @timing
     def func_1_5(sleep_time_ms):
         logging.info("======= vertex5 execution =======")
+        logging.info(f"func_1_5 received: {sleep_time_ms}")
         t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+        return 500
 
     @task
     @timing
     def func_1_6(sleep_time_ms):
         logging.info("======= vertex6 execution =======")
+        logging.info(f"func_1_6 received: {sleep_time_ms}")
         t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+        return 600
 
     # specify data flow
     sleep_time_ms = 125
