@@ -4,6 +4,15 @@ import logging
 from functools import wraps
 from time import time
 import time as t_module
+import sys
+import os
+
+# 将带~的路径转换为绝对路径
+module_path = os.path.expanduser("~/my_airflow/6200.trip-booking")  # ~被替换为家目录
+sys.path.append(module_path)  # 添加处理后的路径
+import input, cancel_flight, cancel_rental, cancel_hotel
+import confirm, reserve_flight, reserve_hotel, reserve_rental
+
 
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
 def timing(f):
@@ -24,55 +33,70 @@ def timing(f):
 def dag_w1_d8():
     @task
     @timing
-    def func_1_1(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_1():
+        logging.info("======= vertex1 execution =======")
+        eventnow = input.generate_input(size = large)
+        t_module.sleep(125 / 1000)
+        return eventnow
 
     @task
     @timing
-    def func_1_2(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_2(event):
+        logging.info("======= vertex2 execution =======")
+        eventnow = reserve_hotel.handler(event)
+        t_module.sleep(125 / 1000)
+        return eventnow
 
     @task
     @timing
-    def func_1_3(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_3(even):
+        logging.info("======= vertex3 execution =======")
+        eventnow = reserve_rental.handler(event)
+        t_module.sleep(125 / 1000)
+        return eventnow
     
     @task
     @timing
-    def func_1_4(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_4(event):
+        logging.info("======= vertex4 execution =======")
+        eventnow = reserve_flight.handler(event)
+        t_module.sleep(125 / 1000)
+        return eventnow
     
     @task
     @timing
-    def func_1_5(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_5(event):
+        logging.info("======= vertex5 execution =======")
+        eventnow = confirm.handler(event)
+        t_module.sleep(125 / 1000)
+        return eventnow
 
     @task
     @timing
-    def func_1_6(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_6(event):
+        logging.info("======= vertex6 execution =======")
+        eventnow = cancel_flight.handler(event)
+        t_module.sleep(125 / 1000)
+        return eventnow
 
     @task
     @timing
-    def func_1_7(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_7(event):
+        logging.info("======= vertex7 execution =======")
+        eventnow = cancel_rental.handler(event)
+        t_module.sleep(125 / 1000)
+        return eventnow
 
     @task
     @timing
-    def func_1_8(sleep_time_ms):
-        t_module.sleep(sleep_time_ms / 1000)
-        return sleep_time_ms
+    def func_1_8(event):
+        eventnow = cancel_hotel.handler(event)
+        logging.info("======= vertex8 execution =======")
+        t_module.sleep(125 / 1000)
+        return eventnow
 
     # specify data flow
-    sleep_time_ms = 125
-    func_1_1_output = func_1_1(sleep_time_ms)
+    func_1_1_output = func_1_1()
     func_1_2_output = func_1_2(func_1_1_output)
     func_1_3_output = func_1_3(func_1_2_output)
     func_1_4_output = func_1_4(func_1_3_output)
