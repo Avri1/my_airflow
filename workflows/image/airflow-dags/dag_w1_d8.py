@@ -10,9 +10,9 @@ import os
 # 将带~的路径转换为绝对路径
 module_path = os.path.expanduser("~/my_airflow/6200.trip-booking")  # ~被替换为家目录
 sys.path.append(module_path)  # 添加处理后的路径
-import input, cancel_flight, cancel_rental, cancel_hotel
+import cancel_flight, cancel_rental, cancel_hotel
 import confirm, reserve_flight, reserve_hotel, reserve_rental
-
+import trip_input
 
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
 def timing(f):
@@ -35,7 +35,7 @@ def dag_w1_d8():
     @timing
     def func_1_1():
         logging.info("======= vertex1 execution =======")
-        eventnow = input.generate_input(size = large)
+        eventnow = trip_input.generate_input(size = large)
         t_module.sleep(125 / 1000)
         return eventnow
 
