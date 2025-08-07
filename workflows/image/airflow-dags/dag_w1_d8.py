@@ -4,14 +4,18 @@ import logging
 from functools import wraps
 from time import time
 import time as t_module
+import uuid
+
+# 添加trip-booking模块到路径
 import sys
 import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+trip_booking_path = os.path.join(current_dir, "6200.trip-booking")
+sys.path.append(trip_booking_path)
 
-# 将带~的路径转换为绝对路径
-module_path = os.path.expanduser("~/my_airflow/6200.trip-booking")  # ~被替换为家目录
-sys.path.append(module_path)  # 添加处理后的路径
-import cancel_flight, cancel_rental, cancel_hotel
-import confirm, reserve_flight, reserve_hotel, reserve_rental
+# 导入trip-booking模块
+from python import cancel_flight, cancel_rental, cancel_hotel
+from python import confirm, reserve_flight, reserve_hotel, reserve_rental
 import trip_input
 
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
@@ -35,7 +39,17 @@ def dag_w1_d8():
     @timing
     def func_1_1():
         logging.info("======= vertex1 execution =======")
-        eventnow = trip_input.generate_input(size = large)
+        eventnow = trip_input.generate_input(
+            data_dir=None,
+            size="large",
+            benchmarks_bucket=None,
+            input_buckets=None,
+            output_buckets=None,
+            upload_func=None,
+            nosql_func=None
+        )
+        # 添加必需的 request-id 字段
+        eventnow["request-id"] = str(uuid.uuid4())
         t_module.sleep(125 / 1000)
         return eventnow
 
@@ -49,7 +63,7 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_3(even):
+    def func_1_3(event):
         logging.info("======= vertex3 execution =======")
         eventnow = reserve_rental.handler(event)
         t_module.sleep(125 / 1000)
