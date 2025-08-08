@@ -41,7 +41,7 @@ def dag_w1_d8():
         logging.info("======= vertex1 execution =======")
         eventnow = trip_input.generate_input(
             data_dir=None,
-            size="large",
+            size="test",
             benchmarks_bucket=None,
             input_buckets=None,
             output_buckets=None,
