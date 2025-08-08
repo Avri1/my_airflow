@@ -10,7 +10,13 @@ import copy
 
 
 class NoSQLClient:
-    """模拟 NoSQL 数据库客户端"""
+    """模拟 NoSQL 数据库客户端
+
+    说明：为了支持在 Airflow/Knative 的跨进程场景中通过 XCom/JSON 传递“状态副本”，
+    在原有基于进程内单例的实现外，新增了基于“纯字典状态”的无类 API（见文末的
+    init_state/insert/update/get/delete）。这样业务侧只需多传一个字典参数即可在不同
+    Pod 之间传递一致的状态。
+    """
     
     def __init__(self):
         # 使用字典来模拟数据库表
@@ -146,6 +152,19 @@ class NoSQLClient:
         with self._lock:
             return json.dumps(self._tables, indent=2, ensure_ascii=False)
 
+    # ============ 便于跨 Pod 传递的快照能力 ============
+    def snapshot(self) -> Dict[str, Any]:
+        """返回当前内存状态的深拷贝，可安全进行 JSON 序列化/通过 XCom 传递。"""
+        return copy.deepcopy(self._tables)
+
+    @classmethod
+    def from_snapshot(cls, data: Optional[Dict[str, Any]]):
+        """基于传入的字典状态还原一个新的客户端实例。"""
+        client = cls()
+        if data:
+            client._tables = copy.deepcopy(data)
+        return client
+
 
 class NoSQLModule:
     """模拟 nosql 模块，提供单例模式的数据库客户端"""
@@ -215,3 +234,54 @@ if __name__ == "__main__":
     
     # 打印所有数据
     print_all_data()
+
+# =============================================================
+# 下方提供一组“纯字典”API，便于在业务函数中只多传一个参数（状态字典），
+# 而无需依赖进程内单例，从而在 Knative 的多 Pod 环境下保持一致。
+
+NoSQLState = Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]
+
+def init_state() -> NoSQLState:
+    """创建一个全新的、可序列化的 NoSQL 状态字典。"""
+    return {}
+
+def _ensure_slots(state: NoSQLState, table_name: str, pk_value: str) -> Dict[str, Dict[str, Any]]:
+    table_map = state.setdefault(table_name, {})
+    return table_map.setdefault(pk_value, {})
+
+def insert(state: NoSQLState, table_name: str,
+           primary_key: Tuple[str, str], secondary_key: Tuple[str, str],
+           data: Dict[str, Any]) -> None:
+    """在传入的状态字典上执行插入操作（原地生效）。"""
+    pk_name, pk_value = primary_key
+    sk_name, sk_value = secondary_key
+    slot = _ensure_slots(state, table_name, pk_value)
+    record = copy.deepcopy(data)
+    record[pk_name] = pk_value
+    record[sk_name] = sk_value
+    slot[sk_value] = record
+
+def get(state: NoSQLState, table_name: str,
+        primary_key: Tuple[str, str], secondary_key: Tuple[str, str]) -> Optional[Dict[str, Any]]:
+    """在传入的状态字典上读取记录。"""
+    pk_value = primary_key[1]
+    sk_value = secondary_key[1]
+    return state.get(table_name, {}).get(pk_value, {}).get(sk_value)
+
+def update(state: NoSQLState, table_name: str,
+           primary_key: Tuple[str, str], secondary_key: Tuple[str, str],
+           patch: Dict[str, Any]) -> None:
+    """在传入的状态字典上更新记录（存在则原地更新）。"""
+    rec = get(state, table_name, primary_key, secondary_key)
+    if rec is not None:
+        rec.update(patch)
+
+def delete(state: NoSQLState, table_name: str,
+           primary_key: Tuple[str, str], secondary_key: Tuple[str, str]) -> bool:
+    """在传入的状态字典上删除记录。"""
+    pk_value = primary_key[1]
+    sk_value = secondary_key[1]
+    if table_name in state and pk_value in state[table_name] and sk_value in state[table_name][pk_value]:
+        del state[table_name][pk_value][sk_value]
+        return True
+    return False

@@ -16,6 +16,7 @@ sys.path.append(trip_booking_path)
 # 导入trip-booking模块
 from python import cancel_flight, cancel_rental, cancel_hotel
 from python import confirm, reserve_flight, reserve_hotel, reserve_rental
+from python import nosql as nd
 import trip_input
 
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
@@ -50,74 +51,76 @@ def dag_w1_d8():
         )
         # 添加必需的 request-id 字段
         eventnow["request-id"] = str(uuid.uuid4())
+        # 初始化可序列化的字典态 nosql 状态
+        db_state = nd.init_state()
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
 
     @task
     @timing
-    def func_1_2(event):
+    def func_1_2(event, db_state):
         logging.info("======= vertex2 execution =======")
-        eventnow = reserve_hotel.handler(event)
+        eventnow, db_state = reserve_hotel.handler(event, db_state)
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
 
     @task
     @timing
-    def func_1_3(event):
+    def func_1_3(event, db_state):
         logging.info("======= vertex3 execution =======")
-        eventnow = reserve_rental.handler(event)
+        eventnow, db_state = reserve_rental.handler(event, db_state)
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
     
     @task
     @timing
-    def func_1_4(event):
+    def func_1_4(event, db_state):
         logging.info("======= vertex4 execution =======")
-        eventnow = reserve_flight.handler(event)
+        eventnow, db_state = reserve_flight.handler(event, db_state)
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
     
     @task
     @timing
-    def func_1_5(event):
+    def func_1_5(event, db_state):
         logging.info("======= vertex5 execution =======")
-        eventnow = confirm.handler(event)
+        eventnow, db_state = confirm.handler(event, db_state)
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
 
     @task
     @timing
-    def func_1_6(event):
+    def func_1_6(event, db_state):
         logging.info("======= vertex6 execution =======")
-        eventnow = cancel_flight.handler(event)
+        eventnow, db_state = cancel_flight.handler(event, db_state)
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
 
     @task
     @timing
-    def func_1_7(event):
+    def func_1_7(event, db_state):
         logging.info("======= vertex7 execution =======")
-        eventnow = cancel_rental.handler(event)
+        eventnow, db_state = cancel_rental.handler(event, db_state)
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
 
     @task
     @timing
-    def func_1_8(event):
-        eventnow = cancel_hotel.handler(event)
+    def func_1_8(event, db_state):
+        eventnow, db_state = cancel_hotel.handler(event, db_state)
         logging.info("======= vertex8 execution =======")
         t_module.sleep(125 / 1000)
-        return eventnow
+        return eventnow, db_state
 
     # specify data flow
-    func_1_1_output = func_1_1()
-    func_1_2_output = func_1_2(func_1_1_output)
-    func_1_3_output = func_1_3(func_1_2_output)
-    func_1_4_output = func_1_4(func_1_3_output)
-    func_1_5_output = func_1_5(func_1_4_output)
-    func_1_6_output = func_1_6(func_1_5_output)
-    func_1_7_output = func_1_7(func_1_6_output)
-    func_1_8(func_1_7_output)
+    event, db = func_1_1()
+    event, db = func_1_2(event, db)
+    event, db = func_1_3(event, db)
+    event, db = func_1_4(event, db)
+    event, db = func_1_5(event, db)
+    event, db = func_1_6(event, db)
+    event, db = func_1_7(event, db)
+    func_1_8(event, db)
     
 # execute dag
 etl_dag = dag_w1_d8()

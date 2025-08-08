@@ -1,12 +1,11 @@
 import uuid
 
-from . import nosql
+from . import nosql as nd  # 使用纯字典 nosql API
 
-nosql_client = nosql.nosql.get_instance()
 nosql_table_name = "hotel_booking"
 
 
-def handler(event):
+def handler(event, db_state):
 
     expected_result = event["expected_result"]
     if expected_result["result"] == "failure" and expected_result["reason"] == "hotel":
@@ -20,7 +19,8 @@ def handler(event):
     hotel_price = "130"
     hotel_name = "BestEver Hotel"
 
-    nosql_client.insert(
+    nd.insert(
+        db_state,
         nosql_table_name,
         ("trip_id", trip_id),
         ("booking_id", hotel_booking_id),
@@ -32,4 +32,4 @@ def handler(event):
         },
     )
 
-    return {"trip_id": trip_id, "booking_id": hotel_booking_id, **event}
+    return {"trip_id": trip_id, "booking_id": hotel_booking_id, **event}, db_state
