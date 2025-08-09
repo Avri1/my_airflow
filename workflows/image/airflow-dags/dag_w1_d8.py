@@ -58,7 +58,8 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_2(event, db_state):
+    def func_1_2(upstream_output):
+        event, db_state = upstream_output
         logging.info("======= vertex2 execution =======")
         eventnow, db_state = reserve_hotel.handler(event, db_state)
         t_module.sleep(125 / 1000)
@@ -66,7 +67,8 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_3(event, db_state):
+    def func_1_3(upstream_output):
+        event, db_state = upstream_output
         logging.info("======= vertex3 execution =======")
         eventnow, db_state = reserve_rental.handler(event, db_state)
         t_module.sleep(125 / 1000)
@@ -74,7 +76,8 @@ def dag_w1_d8():
     
     @task
     @timing
-    def func_1_4(event, db_state):
+    def func_1_4(upstream_output):
+        event, db_state = upstream_output
         logging.info("======= vertex4 execution =======")
         eventnow, db_state = reserve_flight.handler(event, db_state)
         t_module.sleep(125 / 1000)
@@ -82,7 +85,8 @@ def dag_w1_d8():
     
     @task
     @timing
-    def func_1_5(event, db_state):
+    def func_1_5(upstream_output):
+        event, db_state = upstream_output
         logging.info("======= vertex5 execution =======")
         eventnow, db_state = confirm.handler(event, db_state)
         t_module.sleep(125 / 1000)
@@ -90,7 +94,8 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_6(event, db_state):
+    def func_1_6(upstream_output):
+        event, db_state = upstream_output
         logging.info("======= vertex6 execution =======")
         eventnow, db_state = cancel_flight.handler(event, db_state)
         t_module.sleep(125 / 1000)
@@ -98,7 +103,8 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_7(event, db_state):
+    def func_1_7(upstream_output):
+        event, db_state = upstream_output
         logging.info("======= vertex7 execution =======")
         eventnow, db_state = cancel_rental.handler(event, db_state)
         t_module.sleep(125 / 1000)
@@ -106,21 +112,23 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_8(event, db_state):
+    def func_1_8(upstream_output):
+        event, db_state = upstream_output
         eventnow, db_state = cancel_hotel.handler(event, db_state)
         logging.info("======= vertex8 execution =======")
         t_module.sleep(125 / 1000)
         return eventnow, db_state
 
     # specify data flow
-    event, db = func_1_1()
-    event, db = func_1_2(event, db)
-    event, db = func_1_3(event, db)
-    event, db = func_1_4(event, db)
-    event, db = func_1_5(event, db)
-    event, db = func_1_6(event, db)
-    event, db = func_1_7(event, db)
-    func_1_8(event, db)
-    
+# specify data flow
+    func_1_1_output = func_1_1()
+    func_1_2_output = func_1_2(func_1_1_output)
+    func_1_3_output = func_1_3(func_1_2_output)
+    func_1_4_output = func_1_4(func_1_3_output)
+    func_1_5_output = func_1_5(func_1_4_output)
+    func_1_6_output = func_1_6(func_1_5_output)
+    func_1_7_output = func_1_7(func_1_6_output)
+    func_1_8(func_1_7_output)
+
 # execute dag
 etl_dag = dag_w1_d8()
