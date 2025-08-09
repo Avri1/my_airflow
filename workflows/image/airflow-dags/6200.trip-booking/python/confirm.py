@@ -1,9 +1,9 @@
 from . import nosql
 
-nosql_client = nosql.nosql.get_instance()
+# nosql_client = nosql.nosql.get_instance() # 去掉全局客户端
 
 
-def handler(event):
+def handler(db_state, event): # 接收 db_state
 
     expected_result = event["expected_result"]
     if expected_result["result"] == "failure" and expected_result["reason"] == "confirm":
@@ -12,9 +12,11 @@ def handler(event):
     trip_id = event["trip_id"]
 
     # Confirm flight
+    # 将上一步的 state 传入，并接收返回的新 state
     nosql_table_name = "flights"
     flight_id = event["flight_id"]
-    nosql_client.update(
+    db_state_after_flight = nosql.update(
+        db_state, # 传入当前 state
         nosql_table_name,
         ("trip_id", trip_id),
         ("flight_id", flight_id),
@@ -23,7 +25,8 @@ def handler(event):
 
     # Confirm car rental
     nosql_table_name = "car_rentals"
-    nosql_client.update(
+    db_state_after_rental = nosql.update(
+        db_state_after_flight, # 传入上一步更新后的 state
         nosql_table_name,
         ("trip_id", trip_id),
         ("rental_id", event["rental_id"]),
@@ -32,11 +35,13 @@ def handler(event):
 
     # Confirm hotel booking
     nosql_table_name = "hotel_booking"
-    nosql_client.update(
+    db_state_after_hotel = nosql.update(
+        db_state_after_rental, # 传入上一步更新后的 state
         nosql_table_name,
         ("trip_id", trip_id),
         ("booking_id", event["booking_id"]),
         {"status": "booked"},
     )
 
-    return {"trip_id": trip_id, "status": "success"}
+    # 返回最终的 state 和 event
+    return db_state_after_hotel, {"trip_id": trip_id, "status": "success"}

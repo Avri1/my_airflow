@@ -51,76 +51,75 @@ def dag_w1_d8():
         )
         # 添加必需的 request-id 字段
         eventnow["request-id"] = str(uuid.uuid4())
-        # 初始化可序列化的字典态 nosql 状态
+        # 初始化空的字典态 nosql 状态
         db_state = nd.init_state()
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return db_state, eventnow
 
     @task
     @timing
     def func_1_2(upstream_output):
-        event, db_state = upstream_output
+        db_state, event = upstream_output
         logging.info("======= vertex2 execution =======")
-        eventnow, db_state = reserve_hotel.handler(event, db_state)
+        new_db_state, new_event = reserve_hotel.handler(db_state, event)
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
 
     @task
     @timing
     def func_1_3(upstream_output):
-        event, db_state = upstream_output
+        db_state, event = upstream_output
         logging.info("======= vertex3 execution =======")
-        eventnow, db_state = reserve_rental.handler(event, db_state)
+        new_db_state, new_event = reserve_rental.handler(db_state, event)
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
     
     @task
     @timing
     def func_1_4(upstream_output):
-        event, db_state = upstream_output
+        db_state, event = upstream_output
         logging.info("======= vertex4 execution =======")
-        eventnow, db_state = reserve_flight.handler(event, db_state)
+        new_db_state, new_event = reserve_flight.handler(db_state, event)
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
     
     @task
     @timing
     def func_1_5(upstream_output):
-        event, db_state = upstream_output
+        db_state, event = upstream_output
         logging.info("======= vertex5 execution =======")
-        eventnow, db_state = confirm.handler(event, db_state)
+        new_db_state, new_event = confirm.handler(db_state, event)
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
 
     @task
     @timing
     def func_1_6(upstream_output):
-        event, db_state = upstream_output
+        db_state, event = upstream_output
         logging.info("======= vertex6 execution =======")
-        eventnow, db_state = cancel_flight.handler(event, db_state)
+        new_db_state, new_event = cancel_flight.handler(db_state, event)
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
 
     @task
     @timing
     def func_1_7(upstream_output):
-        event, db_state = upstream_output
+        db_state, event = upstream_output
         logging.info("======= vertex7 execution =======")
-        eventnow, db_state = cancel_rental.handler(event, db_state)
+        new_db_state, new_event = cancel_rental.handler(db_state, event)
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
 
     @task
     @timing
     def func_1_8(upstream_output):
-        event, db_state = upstream_output
-        eventnow, db_state = cancel_hotel.handler(event, db_state)
+        db_state, event = upstream_output
+        new_db_state, new_event = cancel_hotel.handler(db_state, event)
         logging.info("======= vertex8 execution =======")
         t_module.sleep(125 / 1000)
-        return eventnow, db_state
+        return new_db_state, new_event
 
     # specify data flow
-# specify data flow
     func_1_1_output = func_1_1()
     func_1_2_output = func_1_2(func_1_1_output)
     func_1_3_output = func_1_3(func_1_2_output)

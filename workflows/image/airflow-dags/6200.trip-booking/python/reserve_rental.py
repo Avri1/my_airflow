@@ -1,10 +1,10 @@
 from . import nosql
 
-nosql_client = nosql.nosql.get_instance()
+# nosql_client = nosql.nosql.get_instance() # 去掉全局客户端
 nosql_table_name = "car_rentals"
 
 
-def handler(event):
+def handler(db_state, event): # 接收 db_state
 
     expected_result = event["expected_result"]
     if expected_result["result"] == "failure" and expected_result["reason"] == "rental":
@@ -18,7 +18,8 @@ def handler(event):
     car_price = "125"
     car_name = "Fiat 126P"
 
-    nosql_client.insert(
+    new_db_state = nosql.insert(
+        db_state,
         nosql_table_name,
         ("trip_id", trip_id),
         ("rental_id", rental_id),
@@ -30,4 +31,4 @@ def handler(event):
         },
     )
 
-    return {"trip_id": trip_id, "rental_id": rental_id, **event}
+    return new_db_state, {"trip_id": trip_id, "rental_id": rental_id, **event}
