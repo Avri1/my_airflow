@@ -43,5 +43,6 @@ def handler(db_state, event): # 接收 db_state
         {"status": "booked"},
     )
 
-    # 返回最终的 state 和 event
-    return db_state_after_hotel, {"trip_id": trip_id, "status": "success"}
+    # 返回最终的 state 和更新后的 event
+    event['status'] = 'success'
+    return db_state_after_hotel, event
