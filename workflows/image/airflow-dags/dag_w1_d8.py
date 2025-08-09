@@ -98,6 +98,7 @@ def dag_w1_d8():
         db_state, event = upstream_output
         logging.info("======= vertex6 execution =======")
         new_db_state, new_event = cancel_flight.handler(db_state, event)
+        logging.info(f"func_1_6 is returning event: {new_event}")
         t_module.sleep(125 / 1000)
         return new_db_state, new_event
 
@@ -105,6 +106,7 @@ def dag_w1_d8():
     @timing
     def func_1_7(upstream_output):
         db_state, event = upstream_output
+        logging.info(f"func_1_7 received event: {event}")
         logging.info("======= vertex7 execution =======")
         new_db_state, new_event = cancel_rental.handler(db_state, event)
         t_module.sleep(125 / 1000)
