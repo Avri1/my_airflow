@@ -150,6 +150,7 @@ def generate_input(
 
     return trip_details
 
+#########################################图部分########################################################
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
 def timing(f):
     @wraps(f)
@@ -166,12 +167,13 @@ def timing(f):
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     catchup=False,
     is_paused_upon_creation=False)
-def dag_w1_d8():
+def dag_w1_d7():
     @task
     @timing
-    def func_1_1():
-        logging.info("======= vertex1 execution =======")
-        eventnow = generate_input(
+    def generate_input_and_reserve_hotel():
+        # 1. 合并 func_1_1 的逻辑，生成初始输入
+        logging.info("======= vertex1 execution (integrated) =======")
+        event = generate_input(
             data_dir=None,
             size="test",
             benchmarks_bucket=None,
@@ -180,17 +182,10 @@ def dag_w1_d8():
             upload_func=None,
             nosql_func=None
         )
-        # 添加必需的 request-id 字段
-        eventnow["request-id"] = str(uuid.uuid4())
-        # 初始化空的字典态 nosql 状态
+        event["request-id"] = str(uuid.uuid4())
         db_state = init_state()
-        t_module.sleep(125 / 1000)
-        return db_state, eventnow
 
-    @task
-    @timing
-    def func_1_2(upstream_output):
-        db_state, event = upstream_output
+        # 2. 执行原来的业务逻辑
         logging.info("======= vertex2 execution =======")
         
         # 内联 reserve_hotel.handler(db_state, event) 的逻辑
@@ -235,7 +230,7 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_3(upstream_output):
+    def reserve_rental(upstream_output):
         db_state, event = upstream_output
         logging.info("======= vertex3 execution =======")
         
@@ -278,7 +273,7 @@ def dag_w1_d8():
     
     @task
     @timing
-    def func_1_4(upstream_output):
+    def reserve_flight(upstream_output):
         db_state, event = upstream_output
         logging.info("======= vertex4 execution =======")
         
@@ -328,7 +323,7 @@ def dag_w1_d8():
     
     @task
     @timing
-    def func_1_5(upstream_output):
+    def confirm_booking(upstream_output):
         db_state, event = upstream_output
         logging.info("======= vertex5 execution =======")
         
@@ -387,7 +382,7 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_6(upstream_output):
+    def cancel_flight(upstream_output):
         db_state, event = upstream_output
         logging.info("======= vertex6 execution =======")
         
@@ -407,15 +402,13 @@ def dag_w1_d8():
         new_event = event
         # %%% 返回值改为元组，包含更新后的db_state和event，供下游任务使用 %%%
         
-        logging.info(f"func_1_6 is returning event: {new_event}")
         t_module.sleep(125 / 1000)
         return new_db_state, new_event
 
     @task
     @timing
-    def func_1_7(upstream_output):
+    def cancel_rental(upstream_output):
         db_state, event = upstream_output
-        logging.info(f"func_1_7 received event: {event}")
         logging.info("======= vertex7 execution =======")
         
         # 内联 cancel_rental.handler(db_state, event) 的逻辑
@@ -439,7 +432,7 @@ def dag_w1_d8():
 
     @task
     @timing
-    def func_1_8(upstream_output):
+    def cancel_hotel(upstream_output):
         db_state, event = upstream_output
         
         # 内联 cancel_hotel.handler(db_state, event) 的逻辑
@@ -462,14 +455,13 @@ def dag_w1_d8():
         return new_db_state, new_event
 
     # specify data flow
-    func_1_1_output = func_1_1()
-    func_1_2_output = func_1_2(func_1_1_output)
-    func_1_3_output = func_1_3(func_1_2_output)
-    func_1_4_output = func_1_4(func_1_3_output)
-    func_1_5_output = func_1_5(func_1_4_output)
-    func_1_6_output = func_1_6(func_1_5_output)
-    func_1_7_output = func_1_7(func_1_6_output)
-    func_1_8(func_1_7_output)
+    reserve_hotel_output = generate_input_and_reserve_hotel()
+    reserve_rental_output = reserve_rental(reserve_hotel_output)
+    reserve_flight_output = reserve_flight(reserve_rental_output)
+    confirm_booking_output = confirm_booking(reserve_flight_output)
+    cancel_flight_output = cancel_flight(confirm_booking_output)
+    cancel_rental_output = cancel_rental(cancel_flight_output)
+    cancel_hotel(cancel_rental_output)
 
 # execute dag
-etl_dag = dag_w1_d8()
+etl_dag = dag_w1_d7()
