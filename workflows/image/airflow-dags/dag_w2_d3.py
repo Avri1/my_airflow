@@ -3,7 +3,6 @@ from airflow.decorators import dag, task
 import logging
 from functools import wraps
 from time import time
-%%% 为业务函数提供本地“字典存储”与内联实现，确保在 Knative 多 Pod 下通过 XCom 传递
 import os
 import io
 import uuid
@@ -21,8 +20,8 @@ def timing(f):
         return result
     return wrap
 
-%%% ======================== 存储（字典模拟远端对象存储）========================
-%%% 说明：所有“远端存储”操作都改为读写此字典；在任务间通过 XCom 显式传递
+#%%% ======================== 存储（字典模拟远端对象存储）========================
+#%%% 说明：所有“远端存储”操作都改为读写此字典；在任务间通过 XCom 显式传递
 def init_store() -> dict:
     return {}
 
@@ -63,8 +62,8 @@ def list_directory(store: dict, bucket: str, prefix: str) -> list[str]:
         return []
     return [key for key in store[bucket].keys() if key.startswith(prefix)]
 
-%%% ======================== 业务内联：input / decode / analyse / summarize ========================
-%%% 为尽量贴近源代码，函数名/变量名保持一致，仅在返回值附加 store（或 new_store）
+#%%% ======================== 业务内联：input / decode / analyse / summarize ========================
+#%%% 为尽量贴近源代码，函数名/变量名保持一致，仅在返回值附加 store（或 new_store）
 
 def chunks(lst, n):
     for i in range(0, len(lst), n):
@@ -95,7 +94,7 @@ def upload_imgs(benchmark_bucket, bucket, paths, store):
     return store, keys
 
 def input_generate(data_dir, size, benchmarks_bucket, input_buckets, output_buckets):
-    %%% 内联自 650.vid/input.py 的 generate_input（去掉 upload_func 参数，改为直接写 store 由调用方提供）
+   #%%% 内联自 650.vid/input.py 的 generate_input（去掉 upload_func 参数，改为直接写 store 由调用方提供）
     size_generators = {
         "test": (3, 10, "video_test.mp4"),
         "small": (10, 5, "video_small.mp4"),
@@ -175,7 +174,7 @@ def benchmark_w2_d3():
     # def do_sum(values):
     #     return sum(values)
 
-    %%% 第一层：input（size=small）+ decode（写帧到“字典存储”）
+    #%%% 第一层：input（size=small）+ decode（写帧到“字典存储”）
     @task
     @timing
     def input_and_decode():
@@ -210,7 +209,7 @@ def benchmark_w2_d3():
         }
         return {"store": store, "frames_payload": frames_payload}
 
-    %%% 第二层：两个 analyse 并行（small → 两批）
+    #%%% 第二层：两个 analyse 并行（small → 两批）
     @task
     @timing
     def analyse_0(prev):
@@ -237,7 +236,7 @@ def benchmark_w2_d3():
         preds = {f"{frames_names[idx]}": dets for idx, dets in enumerate(preds)}
         return {"store": store, "preds": preds}
 
-    %%% 第三层：summarize（汇总两个 analyse 的结果）
+    #%%% 第三层：summarize（汇总两个 analyse 的结果）
     @task
     @timing
     def summarize_task(a0, a1):
