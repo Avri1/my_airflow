@@ -1,6 +1,0 @@
-{
-  "timeout": 120,
-  "memory": 256,
-  "languages": ["python"],
-  "modules": ["nosql"]
-}
