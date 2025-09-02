@@ -30,17 +30,17 @@ def _ensure_bucket(store: dict, bucket: str) -> dict:
         store[bucket] = {}
     return store
 
-def put_bytes(store: dict, bucket: str, key: str, data: bytes) -> tuple[dict, str]:
+def put_bytes(store: dict, bucket: str, key: str, data: bytes) -> Tuple[dict, str]:
     _ensure_bucket(store, bucket)
     store[bucket][key] = bytes(data)
     return store, f"{bucket}/{key}"
 
-def upload(store: dict, bucket: str, key: str, local_path: str) -> tuple[dict, str]:
+def upload(store: dict, bucket: str, key: str, local_path: str) -> Tuple[dict, str]:
     with open(local_path, "rb") as f:
         data = f.read()
     return put_bytes(store, bucket, key, data)
 
-def upload_stream(store: dict, bucket: str, key: str, stream: io.BytesIO) -> tuple[dict, str]:
+def upload_stream(store: dict, bucket: str, key: str, stream: io.BytesIO) -> Tuple[dict, str]:
     stream.seek(0)
     data = stream.read()
     return put_bytes(store, bucket, key, data)
