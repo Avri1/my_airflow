@@ -1,6 +1,7 @@
 FROM apache/airflow:2.8.0
 STOPSIGNAL SIGINT
-RUN pip install grpcio grpcio-tools opencv-python-headless
+RUN pip install grpcio grpcio-tools
+RUN pip install opencv-python-headless
 COPY airflow-dags /opt/airflow/dags
 COPY airflow /home/airflow/.local/lib/python3.8/site-packages/airflow
 EXPOSE 50000
