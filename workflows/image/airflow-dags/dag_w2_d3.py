@@ -157,7 +157,7 @@ def summarize_handler(event):
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     catchup=False,
     is_paused_upon_creation=False)
-def benchmark_w2_d3():
+def dag_w2_d3():
     # %%% 原示例任务保留为注释
     # @task
     # @timing
