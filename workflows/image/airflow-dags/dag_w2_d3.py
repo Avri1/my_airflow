@@ -251,4 +251,4 @@ def dag_w2_d3():
     summarize_task(a0, a1)
 
 # execute dag
-etl_dag = benchmark_w2_d3()
+etl_dag = dag_w2_d3()
