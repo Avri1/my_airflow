@@ -7,7 +7,8 @@ import os
 import io
 import uuid
 import cv2
-from typing import Tuple
+from typing import Tuple, List
+
 
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
 def timing(f):
@@ -57,7 +58,7 @@ def download(store: dict, bucket: str, key: str, dest_path: str) -> None:
 def download_stream(store: dict, bucket: str, key: str) -> io.BytesIO:
     return io.BytesIO(get_bytes(store, bucket, key))
 
-def list_directory(store: dict, bucket: str, prefix: str) -> list[str]:
+def list_directory(store: dict, bucket: str, prefix: str) -> List[str]:
     if bucket not in store:
         return []
     return [key for key in store[bucket].keys() if key.startswith(prefix)]
