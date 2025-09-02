@@ -7,7 +7,7 @@ import os
 import io
 import uuid
 import cv2
-
+from typing import Tuple
 
 # by Jonathan Prieto-Cubides https://stackoverflow.com/questions/1622943/timeit-versus-timing-decorator
 def timing(f):
