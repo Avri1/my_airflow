@@ -4,5 +4,6 @@ RUN pip install grpcio grpcio-tools
 RUN pip install opencv-python-headless
 COPY airflow-dags /opt/airflow/dags
 COPY airflow /home/airflow/.local/lib/python3.8/site-packages/airflow
+COPY /data /data
 EXPOSE 50000
 ENTRYPOINT ["python", "/home/airflow/.local/lib/python3.8/site-packages/airflow/grpc/remote_xcom/grpc_worker_entrypoint.py", "--port", "50000"]
